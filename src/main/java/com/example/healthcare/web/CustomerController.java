@@ -1,0 +1,136 @@
+package com.example.healthcare.web;
+
+import com.example.healthcare.dto.customer.CustomerApiPage;
+import com.example.healthcare.dto.customer.CustomerCreateRequest;
+import com.example.healthcare.dto.customer.CustomerResponse;
+import com.example.healthcare.dto.customer.CustomerUpdateRequest;
+import com.example.healthcare.error.InvalidObjectException;
+import com.example.healthcare.mapping.CustomerMapper;
+import com.example.healthcare.model.Customer;
+import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
+import com.example.healthcare.service.CustomerService;
+import com.example.healthcare.validation.ObjectValidator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/healthcare/customers")
+@AllArgsConstructor
+public class CustomerController {
+
+    @Autowired
+    private CustomerService customerService;
+    @Autowired
+    private CustomerMapper customerMapper;
+    @Autowired
+    private ObjectValidator validator;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @GetMapping(value = "", produces = "application/json")
+    public CustomerApiPage<CustomerResponse> getAllCarts(
+            @RequestParam(required = false, defaultValue = "1") Integer currPage ){
+
+
+        Page<CustomerResponse> customerPage = customerService.fetchAll(currPage - 1, 10).map(customerMapper::responseFromModelOne);
+
+        for (CustomerResponse response : customerPage) {
+
+            response.setUrl("http://localhost:8086/healthcare/customers/" + response.getUsername());
+
+
+        }
+        return new CustomerApiPage<>(customerPage);
+    }
+
+
+
+    @GetMapping(value ="{customerId}")
+    public ResponseEntity<CustomerResponse>findById(@PathVariable String customerId){
+
+        Customer customer = customerService.findById(customerId);
+        CustomerResponse customerResponse = customerMapper.responseFromModelOne(customer);
+        customerResponse.setUrl("http://localhost:8086/healthcare/customers/" + customerResponse.getUsername());
+
+        return ResponseEntity.ok().body(customerResponse);
+    }
+
+    @GetMapping(value ="/name/{customerName}")
+    public ResponseEntity<CustomerResponse>findByUserName(@PathVariable String customerName){
+
+        Customer customer = customerService.findByUserName(customerName);
+        CustomerResponse customerResponse = customerMapper.responseFromModelOne(customer);
+        customerResponse.setUrl("http://localhost:8086/healthcare/customers/" + customerResponse.getUsername());
+
+        return ResponseEntity.ok().body(customerResponse);
+    }
+    @DeleteMapping(value ="{customerId}")
+    public ResponseEntity<String> deleteById(@PathVariable String customerId){
+        customerService.deleteById(customerId);
+
+        return ResponseEntity.ok("It is deleted!");
+
+    }
+    @DeleteMapping(value ="/name/{customerName}")
+    public ResponseEntity<String>deleteByName(@PathVariable String customerName){
+        customerService.deleteByName(customerName);
+
+        return ResponseEntity.ok("It is deleted!");
+    }
+
+    @PostMapping(value ="/registration")
+    public ResponseEntity<String> createUserAndRegister(
+            @RequestBody @Valid CustomerCreateRequest customerDto,
+            HttpServletRequest request, Errors errors)  {
+        Map<String, String> validationErrors = validator.validate(customerDto);
+        if (validationErrors.size() != 0) {
+            throw new InvalidObjectException("Invalid Customer Create", validationErrors);
+        }
+
+        Customer create = customerMapper.modelFromCreateRequest(customerDto);
+        Customer saved = customerService.save(create);
+
+
+
+        String appUrl = request.getContextPath();
+        eventPublisher.publishEvent(new OnRegistrationCompleteEventCustomer(saved,
+                request.getLocale(), appUrl));
+
+        //CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
+
+
+
+
+        return new ResponseEntity<>("Registration Successfully!", HttpStatus.CREATED);
+
+    }
+    @PatchMapping(value ="/{customerName}")
+    public ResponseEntity<CustomerResponse>updateCustomer(@PathVariable String customerName, @RequestBody CustomerUpdateRequest customerDto){
+        Map<String, String> validationErrors = validator.validate(customerDto);
+        if (validationErrors.size() != 0) {
+            throw new InvalidObjectException("Invalid Customer Create", validationErrors);
+        }
+        Customer customer = customerService.findByUserName(customerName);
+        customerMapper.updateModelFromDto(customerDto,customer);
+
+        Customer saved = customerService.save(customer);
+
+        CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
+
+        return ResponseEntity.status(203).body(customerResponse);
+    }
+
+
+
+
+}
