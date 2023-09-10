@@ -16,4 +16,7 @@ public interface AppointmentRepository extends CrudRepository<Appointment, UUID>
     Appointment findByCustomersName(@Param("customerName") String customerName);
     @Query("SELECT a FROM Appointment a JOIN a.customer c WHERE c.username = :customerName")
     Appointment deleteByCustomerName(@Param("customerName") String customerName);
+
+    @Query("SELECT a FROM Appointment a WHERE a.doctor.firstName = :firstName AND a.doctor.lastName = :lastName")
+    Appointment findByDoctorFirstNameAndLastName(@Param("firstName") String firstName, @Param("lastName") String lastName);
 }

@@ -10,9 +10,11 @@ import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.AppointmentMapping;
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
+import com.example.healthcare.model.Doctor;
 import com.example.healthcare.registration.appointment.OnRegistrationCompleteEventApp;
 import com.example.healthcare.registration.appointment.OnRegistrationCompleteEventAppDoc;
 import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
+import com.example.healthcare.repository.DoctorRepository;
 import com.example.healthcare.service.AppointmentService;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.service.DoctorService;
@@ -26,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -45,7 +48,7 @@ public class AppointmentController {
     private ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private DoctorService doctorService;
+    private DoctorRepository doctorRepo;
     @Autowired
     private CustomerService customerService;
 
@@ -85,11 +88,20 @@ public class AppointmentController {
         return ResponseEntity.ok().body(appointmentResponse);
     }
 
-    @DeleteMapping(value = "/customer/{customerName}")
+    @DeleteMapping(value = "/{customerName}")
     public ResponseEntity<String> deleteByCustomerName(@PathVariable String customerName) {
-        appointmentService.deleteByName(customerName);
+        Customer existingCustomer = customerService.findByUserName(customerName);
 
-        return ResponseEntity.ok("It is deleted!");
+
+        if (existingCustomer != null) {
+            appointmentService.deleteByName(customerName);
+            return ResponseEntity.ok("It is deleted!");
+
+        }
+        return ResponseEntity.ok("Cannot be deleted!");
+
+
+
     }
 
     @PostMapping("create/{name}")
@@ -104,9 +116,11 @@ public class AppointmentController {
         Customer existingCustomer = customerService.findByUserName(name);
 
         if (existingCustomer != null) {
+
             Appointment create = appointmentMapping.modelFromCreateRequest(appointmentDto);
             create.setCreateTime(LocalDate.now());
             create.setCustomer(existingCustomer);
+            create.setEndTime(create.getStartTime().plusHours(1).plusMinutes(30));
 
             //existingCustomer.getCarts().add(create);
 
@@ -141,17 +155,19 @@ public class AppointmentController {
 
     }
     @PutMapping("/{customerName}")
-    public ResponseEntity<String> chooseDoctor(@PathVariable String customerName, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request){
-        Appointment doctor = appointmentService.setAppointmentDoctor(customerName,doctorDto.getSetFistName(),doctorDto.getSetLastName());
+    public ResponseEntity<String> chooseDoctor(@PathVariable String customerName, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
+        Appointment doctor = appointmentService.setAppointmentDoctor(customerName, doctorDto.getSetFistName(), doctorDto.getSetLastName());
 
+        Doctor doctor1 = doctorRepo.findByFirstNameAndLastName(doctorDto.getSetFistName(), doctorDto.getSetLastName());
 
-        String appUrl = request.getContextPath();
-        eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(doctor,
-                request.getLocale(), appUrl));
-
-
-        return ResponseEntity.ok("It is successfully");
-    }
+        if (doctor1 != null && doctor1.isAvailable()) {
+            // Perform the necessary actions when the doctor is available
+            String appUrl = request.getContextPath();
+            eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(doctor, request.getLocale(), appUrl));
+            return ResponseEntity.ok("It is successfully");
+        }
+            return ResponseEntity.ok("The doctor is busy at that time or not found!");
+        }
 
 
 }

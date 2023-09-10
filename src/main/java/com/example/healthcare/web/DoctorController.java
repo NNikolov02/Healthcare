@@ -3,12 +3,15 @@ package com.example.healthcare.web;
 import com.example.healthcare.dto.doctor.*;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
+import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
 import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerAccept;
 import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerDecline;
 import com.example.healthcare.registration.doctor.OnRegistrationCompleteEventDoctor;
+import com.example.healthcare.repository.AppointmentRepository;
 import com.example.healthcare.repository.CustomerRepository;
+import com.example.healthcare.service.AppointmentService;
 import com.example.healthcare.service.DoctorService;
 import com.example.healthcare.validation.ObjectValidator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +43,8 @@ public class DoctorController {
     private ApplicationEventPublisher eventPublisher;
     @Autowired
     private  CustomerRepository customerRepo;
+    @Autowired
+    private AppointmentRepository appointmentRepo;
 
 
     @GetMapping(value = "", produces = "application/json")
@@ -137,17 +142,23 @@ public class DoctorController {
     public ResponseEntity<String> acceptApp(@PathVariable String userName, @RequestBody SetAccept accept, HttpServletRequest request) {
         Customer customer = customerRepo.findCustomersByDoctorUsername(userName); // Change to customerService
         Doctor doctor = doctorService.findByName(userName);
+        String firstName = doctor.getFirstName();
+        String lastName = doctor.getLastName();
+        Appointment appointment = appointmentRepo.findByDoctorFirstNameAndLastName(firstName,lastName);
 
         if (customer != null && doctor != null) {
             if (accept.isSetAccept()) {
                 // Activation logic
                 doctor.setAvailable(false);
+                doctorService.save(doctor);
                 String appUrl = request.getContextPath();
                 eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerAccept(customer, request.getLocale(), appUrl));
                 return ResponseEntity.ok("The appointment is accepted");
             } else {
                 String appUrl = request.getContextPath();
                 eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerDecline(customer, request.getLocale(), appUrl));
+                appointment.setDoctor(null);
+                appointmentRepo.save(appointment);
 
                 return ResponseEntity.ok("The appointment is not accepted");
             }
