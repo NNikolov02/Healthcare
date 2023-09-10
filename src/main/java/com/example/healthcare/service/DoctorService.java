@@ -45,6 +45,9 @@ public class DoctorService {
     public Doctor findByEmail(String email){
         return repo.findAllByEmail(email);
     }
+    public Doctor findByName(String name){
+        return repo.findByUsername(name);
+    }
 
     public List<Doctor>findByHospitalName(String name){
         return repo.findAllByHospitalName(name);

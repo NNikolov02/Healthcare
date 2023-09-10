@@ -16,5 +16,5 @@ public interface CustomerRepository extends CrudRepository<Customer, UUID> {
     Customer deleteCustomerByUsername(String name);
 
     @Query("SELECT DISTINCT c FROM Customer c JOIN c.appointments a WHERE a.doctor.username= :doctorUsername")
-    Customer findCustomersByDoctorEmail(@Param("doctorUsername") String doctorUsername);
+    Customer findCustomersByDoctorUsername(@Param("doctorUsername") String doctorUsername);
 }

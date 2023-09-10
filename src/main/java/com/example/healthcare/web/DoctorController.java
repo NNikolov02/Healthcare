@@ -1,16 +1,12 @@
 package com.example.healthcare.web;
 
-import com.example.healthcare.dto.customer.CustomerApiPage;
-import com.example.healthcare.dto.customer.CustomerCreateRequest;
-import com.example.healthcare.dto.customer.CustomerResponse;
-import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.dto.doctor.*;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
-import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomer;
-import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
+import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerAccept;
+import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerDecline;
 import com.example.healthcare.registration.doctor.OnRegistrationCompleteEventDoctor;
 import com.example.healthcare.repository.CustomerRepository;
 import com.example.healthcare.service.DoctorService;
@@ -26,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
-import javax.print.Doc;
 import java.util.List;
 import java.util.Map;
 
@@ -138,21 +133,27 @@ public class DoctorController {
 
         return ResponseEntity.status(203).body(doctorResponse);
     }
-    @PutMapping ("/accept/{userName}")
-    public ResponseEntity<String>acceptApp(@PathVariable String userName, @RequestBody SetAccept accept, HttpServletRequest request){
-        Customer customer = customerRepo.findCustomersByDoctorEmail(userName);
-        Doctor doctor = doctorService.findByEmail(userName);
-        if(accept.isSetAccept()){
-            doctor.setAvailable(false);
-            String appUrl = request.getContextPath();
-            eventPublisher.publishEvent(new OnDoctorCompleteEventCustomer(customer,
-                    request.getLocale(), appUrl));
-            return ResponseEntity.ok("It is accepted");
+    @PostMapping ("/accept/{userName}")
+    public ResponseEntity<String> acceptApp(@PathVariable String userName, @RequestBody SetAccept accept, HttpServletRequest request) {
+        Customer customer = customerRepo.findCustomersByDoctorUsername(userName); // Change to customerService
+        Doctor doctor = doctorService.findByName(userName);
+
+        if (customer != null && doctor != null) {
+            if (accept.isSetAccept()) {
+                // Activation logic
+                doctor.setAvailable(false);
+                String appUrl = request.getContextPath();
+                eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerAccept(customer, request.getLocale(), appUrl));
+                return ResponseEntity.ok("The appointment is accepted");
+            } else {
+                String appUrl = request.getContextPath();
+                eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerDecline(customer, request.getLocale(), appUrl));
+
+                return ResponseEntity.ok("The appointment is not accepted");
+            }
+        } else {
+            return ResponseEntity.notFound().build();
         }
-
-        return ResponseEntity.ok("Error");
-
-
     }
 
 }

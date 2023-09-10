@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class DoctorUpdateRequest {
 
+    private String password;
     private String email;
     private String phoneNumber;
 

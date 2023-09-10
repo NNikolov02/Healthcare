@@ -5,14 +5,14 @@ import org.springframework.context.ApplicationEvent;
 
 import java.util.Locale;
 
-public class OnDoctorCompleteEventCustomer extends ApplicationEvent {
+public class OnDoctorCompleteEventCustomerAccept extends ApplicationEvent {
 
     private String appUrl;
     private Locale locale;
     private Customer customer;
 
 
-    public OnDoctorCompleteEventCustomer(Customer customer, Locale locale, String appUrl) {
+    public OnDoctorCompleteEventCustomerAccept(Customer customer, Locale locale, String appUrl) {
         super(customer);
         this.customer = customer;
         this.locale = locale;

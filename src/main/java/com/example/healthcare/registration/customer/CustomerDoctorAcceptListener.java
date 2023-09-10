@@ -2,7 +2,6 @@ package com.example.healthcare.registration.customer;
 
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
-import com.example.healthcare.repository.CustomerRepository;
 import com.example.healthcare.repository.DoctorRepository;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.service.EmailService;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
-public class CustomerDoctorListener implements ApplicationListener<OnDoctorCompleteEventCustomer> {
+public class CustomerDoctorAcceptListener implements ApplicationListener<OnDoctorCompleteEventCustomerAccept> {
 
     @Autowired
     private DoctorRepository doctorRepo;
@@ -23,19 +22,19 @@ public class CustomerDoctorListener implements ApplicationListener<OnDoctorCompl
 
 
     @Autowired
-    public CustomerDoctorListener(CustomerService service, EmailService emailService) {
+    public CustomerDoctorAcceptListener(CustomerService service, EmailService emailService) {
         this.service = service;
         this.emailService = emailService;
 
     }
 
     @Override
-    public void onApplicationEvent(OnDoctorCompleteEventCustomer event) {
+    public void onApplicationEvent(OnDoctorCompleteEventCustomerAccept event) {
         this.confirmRegistration(event);
 
     }
 
-    private void confirmRegistration(OnDoctorCompleteEventCustomer event) {
+    private void confirmRegistration(OnDoctorCompleteEventCustomerAccept event) {
         Customer customer = event.getCustomer();
         String name = customer.getUsername();
         Doctor doctor = doctorRepo.findDoctorsByCustomerName(name);
