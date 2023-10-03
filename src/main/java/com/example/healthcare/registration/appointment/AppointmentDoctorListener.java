@@ -43,7 +43,7 @@ public class AppointmentDoctorListener implements ApplicationListener<OnRegistra
         String confirmationUrl = event.getAppUrl() + "/confirmRegistration?token=" + token;
         String message = "The patient " + customer.getLastName() + " wants to visit you at " + appointment.getStartTime()
                 + "\n Would you accept? " + "\n Please click on the link to accept or decline this appointment:"
-                + "\n http://localhost:8083/healthcare/doctors/accept/ " + doctor.getUsername();
+                + "\n http://localhost:8083/healthcare/doctors/accept/ " + appointment.getId();
 
         emailService.sendSimpleMessage(recipientAddress, subject, message);
     }

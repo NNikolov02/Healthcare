@@ -1,13 +1,18 @@
 package com.example.healthcare.web;
 
+import com.example.healthcare.dto.AvailableHoursDto;
 import com.example.healthcare.dto.customer.CustomerApiPage;
 import com.example.healthcare.dto.customer.CustomerCreateRequest;
 import com.example.healthcare.dto.customer.CustomerResponse;
 import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.CustomerMapper;
+import com.example.healthcare.mapping.DoctorMapper;
+import com.example.healthcare.model.AvailableHours;
 import com.example.healthcare.model.Customer;
+import com.example.healthcare.model.Doctor;
 import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
+import com.example.healthcare.repository.DoctorRepository;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.validation.ObjectValidator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +36,10 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    @Autowired
+    private DoctorRepository doctorRepo;
+    @Autowired
+    private DoctorMapper doctorMapper;
     @Autowired
     private CustomerMapper customerMapper;
     @Autowired
@@ -74,6 +84,23 @@ public class CustomerController {
 
         return ResponseEntity.ok().body(customerResponse);
     }
+    @GetMapping("/catalogHours/{doctorLastName}")
+    public ResponseEntity<List<AvailableHoursDto>>findCatalog(@PathVariable String doctorLastName){
+        Doctor doctor = doctorRepo.findByLastName(doctorLastName);
+        List<AvailableHours> hours = doctor.getAvailableHours();
+        List<AvailableHoursDto> doctorHoursResponse = doctorMapper.responseFromModelHours(hours);
+        for(AvailableHoursDto availableHoursDto:doctorHoursResponse) {
+            for (AvailableHours availableHours : hours) {
+                availableHoursDto.setDate(availableHours.getDate());
+                availableHoursDto.setHours(availableHours.getHours());
+            }
+        }
+        //doctorHoursResponse.setFirstName(doctor.getFirstName());
+        // doctorHoursResponse.setLastName(doctor.getLastName());
+
+        return ResponseEntity.ok().body(doctorHoursResponse);
+    }
+
     @DeleteMapping(value ="{customerId}")
     public ResponseEntity<String> deleteById(@PathVariable String customerId){
         customerService.deleteById(customerId);

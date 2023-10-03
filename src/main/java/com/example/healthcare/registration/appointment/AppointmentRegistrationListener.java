@@ -29,11 +29,11 @@ public class AppointmentRegistrationListener implements ApplicationListener<OnRe
 
     @Override
     public void onApplicationEvent(OnRegistrationCompleteEventApp event) {
-        this.confirmRegistration(event);
+        this.confirmRegistration1(event);
 
     }
 
-    private void confirmRegistration(OnRegistrationCompleteEventApp event) {
+    private void confirmRegistration1(OnRegistrationCompleteEventApp event) {
         Appointment appointment = event.getAppointment();
         String token = UUID.randomUUID().toString();
         service.createVerificationToken(appointment, token);

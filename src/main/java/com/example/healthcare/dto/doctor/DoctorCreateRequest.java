@@ -1,7 +1,10 @@
 package com.example.healthcare.dto.doctor;
 
+import com.example.healthcare.dto.AvailableHoursDto;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -17,4 +20,5 @@ public class DoctorCreateRequest {
     private String specialty;
     private String hospitalName;
     private boolean available;
+    private List<AvailableHoursDto> availableHours;
 }

@@ -2,6 +2,7 @@ package com.example.healthcare.service;
 
 import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.model.Appointment;
+import com.example.healthcare.model.AvailableHours;
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
 import com.example.healthcare.repository.AppointmentPagingRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.*;
 
 @Component
@@ -52,16 +54,29 @@ public class AppointmentService {
     public void deleteByName(String customerName){
         repo.deleteByCustomerName(customerName);
     }
-    public Appointment setAppointmentDoctor(String customerName, String firstName, String lastName) {
-        Appointment appointment = repo.findByCustomersName(customerName);
+
+    public Appointment setAppointmentDoctor(String appointmentId, String firstName, String lastName, LocalDate date, String time) {
+        Appointment appointment = repo.findById(UUID.fromString(appointmentId)).orElseThrow(() -> {
+            throw new NotFoundObjectException("Appointment Not Found", Appointment.class.getName(), appointmentId);
+        });
 
         if (appointment != null) {
             // Check if the appointment already has a doctor
             if (appointment.getDoctor() == null) {
                 Doctor doctor = doctorRepo.findByFirstNameAndLastName(firstName, lastName);
+
                 if (doctor != null) {
-                    appointment.setDoctor(doctor);
-                    repo.save(appointment);
+                    List<AvailableHours> availableHours = doctor.getAvailableHours();
+                    for(AvailableHours availableHours1:availableHours){
+                        if(availableHours1.getDate().equals(date) && availableHours1.getHours().contains(time)){
+                            appointment.setStartDate(date);
+                            appointment.setStartTime(time);
+                            appointment.setDoctor(doctor);
+                            repo.save(appointment);
+
+                        }
+                    }
+
 
 
                     return appointment;
@@ -70,7 +85,6 @@ public class AppointmentService {
         }
         return null;
     }
-
     private Date calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Timestamp(cal.getTime().getTime()));

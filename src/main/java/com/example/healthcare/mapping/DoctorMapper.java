@@ -1,12 +1,14 @@
 package com.example.healthcare.mapping;
 
-import com.example.healthcare.dto.doctor.DoctorCreateRequest;
-import com.example.healthcare.dto.doctor.DoctorResponse;
-import com.example.healthcare.dto.doctor.DoctorUpdateRequest;
+import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.doctor.*;
+import com.example.healthcare.model.AvailableHours;
 import com.example.healthcare.model.Doctor;
+
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 
+import javax.print.Doc;
 import java.util.List;
 
 @Component
@@ -14,6 +16,8 @@ import java.util.List;
 public interface DoctorMapper {
 
     Doctor modelFromCreateRequest(DoctorCreateRequest doctorCreateDto);
+
+    List<AvailableHoursDto> responseFromModelHours(List<AvailableHours> availableHours);
 
     DoctorResponse responseFromModelOne(Doctor doctor);
     List<DoctorResponse> responseFromModelList(List<Doctor> doctors);
@@ -23,5 +27,8 @@ public interface DoctorMapper {
     @Mapping(target = "phoneNumber",nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "hospitalName", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateModelFromDto(DoctorUpdateRequest doctorUpdateDto, @MappingTarget Doctor doctor);
+
+
+    // Map the List<LocalTime> to List<Hour> in your DoctorHourss entity
 
 }

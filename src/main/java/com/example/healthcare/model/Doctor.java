@@ -37,8 +37,15 @@ public class Doctor {
 
 
 
-    @OneToOne(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("doctor")
-    private Appointment appointment;
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<AvailableHours> availableHours;
+
+
+
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<Appointment> appointments;
+
 
 }

@@ -120,14 +120,14 @@ public class AppointmentController {
             Appointment create = appointmentMapping.modelFromCreateRequest(appointmentDto);
             create.setCreateTime(LocalDate.now());
             create.setCustomer(existingCustomer);
-            create.setEndTime(create.getStartTime().plusHours(1).plusMinutes(30));
+            //create.setEndTime(create.getStartTime().plusHours(1).plusMinutes(30));
 
             //existingCustomer.getCarts().add(create);
 
             Appointment saved = appointmentService.save(create);
 
             AppointmentResponse cartResponse = appointmentMapping.responseFromModelOne(saved);
-            cartResponse.setCustomer("http://localhost:8083/healthcare/customers/name/" + existingCustomer.getUsername());
+
 
             String appUrl = request.getContextPath();
             eventPublisher.publishEvent(new OnRegistrationCompleteEventApp(saved,
@@ -154,20 +154,22 @@ public class AppointmentController {
         return ResponseEntity.status(203).body(appointmentResponse);
 
     }
-    @PutMapping("/{customerName}")
-    public ResponseEntity<String> chooseDoctor(@PathVariable String customerName, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
-        Appointment doctor = appointmentService.setAppointmentDoctor(customerName, doctorDto.getSetFistName(), doctorDto.getSetLastName());
+    @PutMapping("/{appointmentId}")
+    public ResponseEntity<String> chooseDoctor(@PathVariable String appointmentId, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
+        Appointment appointment = appointmentService.setAppointmentDoctor(appointmentId, doctorDto.getSetFistName()
+                , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime());
 
         Doctor doctor1 = doctorRepo.findByFirstNameAndLastName(doctorDto.getSetFistName(), doctorDto.getSetLastName());
 
-        if (doctor1 != null && doctor1.isAvailable()) {
-            // Perform the necessary actions when the doctor is available
-            String appUrl = request.getContextPath();
-            eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(doctor, request.getLocale(), appUrl));
+        if (doctor1 != null ) {
+
+            String appUrl1 = request.getContextPath();
+            eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(appointment, request.getLocale(), appUrl1));
             return ResponseEntity.ok("It is successfully");
         }
-            return ResponseEntity.ok("The doctor is busy at that time or not found!");
-        }
+        return ResponseEntity.ok("The doctor is busy at that time or not found!");
+    }
+
 
 
 }

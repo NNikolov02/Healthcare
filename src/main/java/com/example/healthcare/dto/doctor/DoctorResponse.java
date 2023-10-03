@@ -1,8 +1,10 @@
 package com.example.healthcare.dto.doctor;
 
+import com.example.healthcare.dto.AvailableHoursDto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,4 +22,5 @@ public class DoctorResponse {
     private String specialty;
     private String hospitalName;
     private boolean available;
+    private List<AvailableHoursDto> availableHours;
 }

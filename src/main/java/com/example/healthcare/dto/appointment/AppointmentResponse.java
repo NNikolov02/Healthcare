@@ -15,11 +15,11 @@ public class AppointmentResponse {
 
     private UUID id;
     private LocalDate createTime;
-
-    private LocalDateTime startTime;
+    private LocalDate startDate;
+    private String startTime;
     private LocalDateTime endTime;
     private String reason;
     private String url;
-    private String customer;
+    private CustomerDto customer;
     private DoctorDto doctor;
 }

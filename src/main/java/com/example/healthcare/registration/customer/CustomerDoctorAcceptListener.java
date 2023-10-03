@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -36,18 +37,19 @@ public class CustomerDoctorAcceptListener implements ApplicationListener<OnDocto
 
     private void confirmRegistration(OnDoctorCompleteEventCustomerAccept event) {
         Customer customer = event.getCustomer();
-        String name = customer.getUsername();
-        Doctor doctor = doctorRepo.findDoctorsByCustomerName(name);
+        UUID name = customer.getId();
+        List<Doctor> doctors = (List<Doctor>) doctorRepo.findDoctorsByCustomerIdList(name);
         String token = UUID.randomUUID().toString();
         service.createVerificationToken(customer, token);
 
         String recipientAddress = customer.getEmail();
         String subject = "Appointment Confirmation";
-       // String confirmationUrl = event.getAppUrl() + "/confirmRegistration?token=" + token;
-        String message = "Hello " + customer.getUsername() + "\n Dr." + doctor.getLastName() + " " + "accepted you appointment!"  ;
+        for (Doctor doctor : doctors) {
+            // String confirmationUrl = event.getAppUrl() + "/confirmRegistration?token=" + token;
+            String message = "Hello " + customer.getUsername() + "\n Dr." + doctor.getLastName() + " " + "accepted you appointment!";
 
-        emailService.sendSimpleMessage(recipientAddress, subject, message);
+            emailService.sendSimpleMessage(recipientAddress, subject, message);
+        }
     }
-
 }
 
