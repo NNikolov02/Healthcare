@@ -2,6 +2,7 @@ package com.example.healthcare.repository;
 
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
+import com.example.healthcare.model.Photo;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,6 @@ public interface DoctorRepository extends CrudRepository<Doctor, UUID> {
     Doctor findDoctorsByCustomerId(@Param("id") UUID customerName);
     @Query("SELECT DISTINCT d FROM Doctor d JOIN d.appointments a JOIN a.customer c WHERE c.id = :id")
     List<Doctor> findDoctorsByCustomerIdList(@Param("id") UUID customerName);
+    @Query("SELECT DISTINCT p FROM Photo p JOIN p.doctor d WHERE d.username= :username")
+    Photo findPhotoByDoctorUsername(@Param("username") String username);
 }

@@ -4,10 +4,7 @@ import com.example.healthcare.dto.AvailableHoursDto;
 import com.example.healthcare.dto.doctor.*;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
-import com.example.healthcare.model.Appointment;
-import com.example.healthcare.model.AvailableHours;
-import com.example.healthcare.model.Customer;
-import com.example.healthcare.model.Doctor;
+import com.example.healthcare.model.*;
 
 import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerAccept;
 import com.example.healthcare.registration.customer.OnDoctorCompleteEventCustomerDecline;
@@ -23,15 +20,18 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
 @RequestMapping("/healthcare/doctors")
@@ -73,8 +73,27 @@ public class DoctorController {
     public ResponseEntity<DoctorResponse>findById(@PathVariable String doctorId){
 
         Doctor doctor = doctorService.findById(doctorId);
+        UUID allPersonPhotoId = doctorService.getAllPersonPhotoIds(doctorId);
+        DoctorResponse response = doctorMapper.responseFromModelOne(doctor);
+        response.setPersonPhotoIds(allPersonPhotoId);
 
-        return ResponseEntity.ok(doctorMapper.responseFromModelOne(doctor));
+
+
+        return ResponseEntity.ok().body(response);
+    }
+    @GetMapping("/photo/{doctorUsername}")
+    @Transactional
+    public ResponseEntity<byte[]> getPhotoById(@PathVariable String doctorUsername) {
+        Photo photo = doctorRepo.findPhotoByDoctorUsername(doctorUsername);
+
+        byte[] imageData = doctorService.retrieveImageData(doctorUsername);
+
+        // Set appropriate content type (e.g., image/jpeg)
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+
+        // Return the binary data as a ResponseEntity
+        return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
     }
 
     @GetMapping(value ="/available/{available}")
@@ -166,22 +185,21 @@ public class DoctorController {
         return new ResponseEntity<>("Registration Successfully!", HttpStatus.CREATED);
 
     }
-    @PatchMapping(value ="/{doctorEmail}")
-    public ResponseEntity<DoctorResponse>updateDoctor(@PathVariable String doctorEmail, @RequestBody DoctorUpdateRequest doctorDto){
-        Map<String, String> validationErrors = validator.validate(doctorDto);
-        if (validationErrors.size() != 0) {
-            throw new InvalidObjectException("Invalid Doctor Create", validationErrors);
-        }
-        Doctor doctor = doctorService.findByEmail(doctorEmail);
-        doctorMapper.updateModelFromDto(doctorDto,doctor);
+    @PostMapping("photo/{doctorUserName}")
+    public ResponseEntity<String> handleImageUpload(@RequestParam("image") MultipartFile file,
+                                                    RedirectAttributes redirectAttributes,@PathVariable String doctorUserName) throws IOException {
+        Doctor doctor = doctorService.findByName(doctorUserName);
 
-        Doctor saved = doctorService.save(doctor);
+        Photo photoDto = Photo.builder()
+                .originalFilename(file.getOriginalFilename())
+                .content(file.getBytes())
+                .build();
 
-       DoctorResponse doctorResponse = doctorMapper.responseFromModelOne(saved);
+        doctor.setPhoto(photoDto);
+        doctorService.save(doctor);
 
-        return ResponseEntity.status(203).body(doctorResponse);
+        return ResponseEntity.ok("It is successfully!");
     }
-
     @PostMapping ("/accept/{appointmentId}")
     public ResponseEntity<String> acceptApp(@PathVariable String appointmentId, @RequestBody SetAccept accept, HttpServletRequest request) {
         List<Customer> customers = (List<Customer>) customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService

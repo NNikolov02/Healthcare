@@ -16,6 +16,7 @@ import java.util.List;
 public interface DoctorMapper {
 
     Doctor modelFromCreateRequest(DoctorCreateRequest doctorCreateDto);
+    Doctor modelFromUploadRequest(DoctorCreateRequest doctorCreateDto);
 
     List<AvailableHoursDto> responseFromModelHours(List<AvailableHours> availableHours);
 

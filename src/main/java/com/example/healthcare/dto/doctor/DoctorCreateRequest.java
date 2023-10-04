@@ -1,6 +1,7 @@
 package com.example.healthcare.dto.doctor;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.PhotoDto;
 import lombok.Builder;
 import lombok.Data;
 
@@ -19,6 +20,7 @@ public class DoctorCreateRequest {
 
     private String specialty;
     private String hospitalName;
-    private boolean available;
+    private Boolean available;
+   // private PhotoDto photo;
     private List<AvailableHoursDto> availableHours;
 }

@@ -3,6 +3,7 @@ package com.example.healthcare.service;
 import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
+import com.example.healthcare.model.Photo;
 import com.example.healthcare.repository.DoctorPagingRepository;
 import com.example.healthcare.repository.DoctorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.print.Doc;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @Service
@@ -47,6 +45,29 @@ public class DoctorService {
     }
     public Doctor findByName(String name){
         return repo.findByUsername(name);
+    }
+    public byte[] retrieveImageData(String username) {
+        // Implement the logic to retrieve binary image data from the database
+        // For example, you can retrieve it by ID from the repository
+        // Replace "yourId" with the actual ID you want to retrieve
+        Long yourId = 1L; // Replace with your desired ID
+        Photo imageEntity = repo.findPhotoByDoctorUsername(username);
+
+        if (imageEntity != null) {
+            return imageEntity.getContent();
+        } else {
+            // Handle the case where the image data is not found (return null or throw an exception)
+            return null;
+        }
+    }
+    public UUID getAllPersonPhotoIds(String personId) {
+        Doctor doctor = repo.findById(UUID.fromString(personId)).get();
+        Photo photo =doctor.getPhoto();
+
+        UUID allPersonPhotoId = photo.getId();
+
+
+        return allPersonPhotoId;
     }
 
     public List<Doctor>findByHospitalName(String name){

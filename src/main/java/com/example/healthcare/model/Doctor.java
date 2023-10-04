@@ -35,7 +35,10 @@ public class Doctor {
     private String hospitalName;
     private boolean available;
 
-
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "photo_id", referencedColumnName = "id")
+    @JsonIgnoreProperties("doctor")
+    private Photo photo;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
     @JsonBackReference

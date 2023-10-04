@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -22,5 +23,6 @@ public class DoctorResponse {
     private String specialty;
     private String hospitalName;
     private boolean available;
+    private UUID personPhotoIds;
     private List<AvailableHoursDto> availableHours;
 }
