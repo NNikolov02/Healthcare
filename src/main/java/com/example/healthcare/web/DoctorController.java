@@ -200,8 +200,8 @@ public class DoctorController {
 
         return ResponseEntity.ok("It is successfully!");
     }
-    @PostMapping ("/accept/{appointmentId}")
-    public ResponseEntity<String> acceptApp(@PathVariable String appointmentId, @RequestBody SetAccept accept, HttpServletRequest request) {
+    @PostMapping ("/appointments/{appointmentId}")
+    public ResponseEntity<String> acceptApp(@PathVariable String appointmentId,@RequestParam boolean setAccept, HttpServletRequest request) {
         List<Customer> customers = (List<Customer>) customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService
         Doctor doctor = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
         String firstName = doctor.getFirstName();
@@ -210,7 +210,7 @@ public class DoctorController {
         for(Customer customer:customers) {
 
             if (customer != null && doctor != null) {
-                if (accept.isSetAccept()) {
+                if (setAccept) {
                     List<AvailableHours> availableHours = doctor.getAvailableHours();
                     for (AvailableHours availableHours1 : availableHours) {
                         for(Appointment appointment:appointments) {

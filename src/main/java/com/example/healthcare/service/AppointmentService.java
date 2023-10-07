@@ -3,7 +3,6 @@ package com.example.healthcare.service;
 import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.AvailableHours;
-import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
 import com.example.healthcare.repository.AppointmentPagingRepository;
 import com.example.healthcare.repository.AppointmentRepository;
