@@ -51,23 +51,25 @@ public class AppointmentService {
     }
 
     public void deleteByName(String customerName){
-        repo.deleteByCustomerName(customerName);
+        repo.deleteAllAppointmentsByCustomerUsername(customerName);
     }
 
     public Appointment setAppointmentDoctor(String appointmentId, String firstName, String lastName, LocalDate date, String time) {
         Appointment appointment = repo.findById(UUID.fromString(appointmentId)).orElseThrow(() -> {
             throw new NotFoundObjectException("Appointment Not Found", Appointment.class.getName(), appointmentId);
         });
+        Doctor doctor1 = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
 
         if (appointment != null) {
             // Check if the appointment already has a doctor
+
             if (appointment.getDoctor() == null) {
                 Doctor doctor = doctorRepo.findByFirstNameAndLastName(firstName, lastName);
 
                 if (doctor != null) {
                     List<AvailableHours> availableHours = doctor.getAvailableHours();
-                    for(AvailableHours availableHours1:availableHours){
-                        if(availableHours1.getDate().equals(date) && availableHours1.getHours().contains(time)){
+                    for (AvailableHours availableHours1 : availableHours) {
+                        if (availableHours1.getDate().equals(date) && availableHours1.getHours().contains(time)) {
                             appointment.setStartDate(date);
                             appointment.setStartTime(time);
                             appointment.setDoctor(doctor);
@@ -75,13 +77,14 @@ public class AppointmentService {
 
                         }
                     }
+                }
 
 
 
                     return appointment;
                 }
             }
-        }
+
         return null;
     }
     private Date calculateExpiryDate(int expiryTimeInMinutes) {

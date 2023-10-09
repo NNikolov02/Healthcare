@@ -231,12 +231,18 @@ public class DoctorController {
 
                 } else {
                     for (Appointment appointment : appointments) {
+                        //Appointment appointment1 = doctor.getAppointments();
 
                         String appUrl = request.getContextPath();
                         eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerDecline(customer, request.getLocale(), appUrl));
-                        appointment.setDoctor(null);
                         appointment.setStartTime(null);
                         appointment.setStartDate(null);
+                        if(doctor.getAppointments().contains(appointment)){
+                            doctor.getAppointments().remove(appointment);
+                        }
+                        doctorService.save(doctor);
+                        appointment.setDoctor(null);
+
                         appointmentRepo.save(appointment);
 
                         return ResponseEntity.ok("The appointment is not accepted");

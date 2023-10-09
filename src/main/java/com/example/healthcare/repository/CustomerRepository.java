@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface CustomerRepository extends CrudRepository<Customer, UUID> {
 
     Customer findCustomerByUsername(String name);
-    Customer deleteCustomerByUsername(String name);
+    void deleteCustomerByUsername(String name);
 
     @Query("SELECT DISTINCT c FROM Customer c JOIN c.appointments a WHERE a.doctor.username= :doctorUsername")
     List<Customer> findAllCustomersByDoctorUsername(@Param("doctorUsername") String doctorUsername);

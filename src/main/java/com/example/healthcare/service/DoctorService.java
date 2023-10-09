@@ -85,7 +85,7 @@ public class DoctorService {
         repo.deleteById(UUID.fromString(doctorId));
     }
     public void deleteByEmail(String email){
-        repo.deleteAllByEmail(email);
+        repo.deleteByEmail(email);
     }
 
 
