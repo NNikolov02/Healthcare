@@ -1,16 +1,23 @@
 package com.example.healthcare.service;
 
+import com.example.healthcare.dto.appointment.AppointmentResponse;
 import com.example.healthcare.error.NotFoundObjectException;
+import com.example.healthcare.mapping.AppointmentMapping;
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.AvailableHours;
+import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
+import com.example.healthcare.registration.appointment.OnRegistrationCompleteEventAppDoc;
 import com.example.healthcare.repository.AppointmentPagingRepository;
 import com.example.healthcare.repository.AppointmentRepository;
 import com.example.healthcare.repository.CustomerRepository;
 import com.example.healthcare.repository.DoctorRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +34,15 @@ public class AppointmentService {
 
     @Autowired
     private AppointmentPagingRepository pagingRepo;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private CustomerRepository customerRepo;
     @Autowired
     private DoctorRepository doctorRepo;
+    @Autowired
+    private AppointmentMapping appointmentMapping;
 
 
     public Page<Appointment> fetchAll(int currentPage, int pageSize) {
@@ -54,7 +65,7 @@ public class AppointmentService {
         repo.deleteAllAppointmentsByCustomerUsername(customerName);
     }
 
-    public Appointment setAppointmentDoctor(String appointmentId, String firstName, String lastName, LocalDate date, String time) {
+    public String setAppointmentDoctor(String appointmentId, String firstName, String lastName, LocalDate date, String time, HttpServletRequest request) {
         Appointment appointment = repo.findById(UUID.fromString(appointmentId)).orElseThrow(() -> {
             throw new NotFoundObjectException("Appointment Not Found", Appointment.class.getName(), appointmentId);
         });
@@ -77,11 +88,14 @@ public class AppointmentService {
 
                         }
                     }
+                    String appUrl1 = request.getContextPath();
+                    eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(appointment, request.getLocale(), appUrl1));
+                    return "It is successfully";
                 }
 
 
 
-                    return appointment;
+                    return "The doctor is busy at that time or not found!";
                 }
             }
 
@@ -97,4 +111,6 @@ public class AppointmentService {
         System.out.println("Creating verification token for doctor: " + appointment.getId());
         System.out.println("Token: " + token);
     }
+
+
 }

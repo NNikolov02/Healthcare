@@ -156,18 +156,11 @@ public class AppointmentController {
     }
     @PutMapping("/{appointmentId}")
     public ResponseEntity<String> chooseDoctor(@PathVariable String appointmentId, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
-        Appointment appointment = appointmentService.setAppointmentDoctor(appointmentId, doctorDto.getSetFistName()
-                , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime());
+        String appointment = appointmentService.setAppointmentDoctor(appointmentId, doctorDto.getSetFistName()
+                , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime(),request);
 
-        Doctor doctor1 = doctorRepo.findByFirstNameAndLastName(doctorDto.getSetFistName(), doctorDto.getSetLastName());
 
-        if (doctor1 != null ) {
-
-            String appUrl1 = request.getContextPath();
-            eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(appointment, request.getLocale(), appUrl1));
-            return ResponseEntity.ok("It is successfully");
-        }
-        return ResponseEntity.ok("The doctor is busy at that time or not found!");
+        return ResponseEntity.ok().body(appointment);
     }
 
 

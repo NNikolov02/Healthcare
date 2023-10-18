@@ -14,8 +14,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class ConfirmationNotificationService {
@@ -25,10 +27,11 @@ public class ConfirmationNotificationService {
     private EmailService emailService;
 
     @Transactional
-    @Scheduled(cron = "0 59 14 * * *")
+    @Scheduled(cron = "0 50 23 * * *")
     public void sendNotifications() {
         LocalDate currentDate = LocalDate.now();
         List<Appointment> appointmentsWithValidStartTime = appointmentRepo.findAppointmentsWithValidStartDate();
+
 
         for (Appointment appointment1 : appointmentsWithValidStartTime) {
             if (appointment1.getDoctor() != null) {
@@ -46,6 +49,8 @@ public class ConfirmationNotificationService {
                             + confirmationUrl + "\n\n See you soon!" + "\n\n\n Best regards," + "\n Healthcare";
 
                     emailService.sendSimpleMessage(customer.getEmail(), "Reminder Notification", message);
+
+
                 }
             }
         }

@@ -23,6 +23,6 @@ public class DoctorResponse {
     private String specialty;
     private String hospitalName;
     private boolean available;
-    private UUID personPhotoIds;
+    private UUID personPhotoId;
     private List<AvailableHoursDto> availableHours;
 }
