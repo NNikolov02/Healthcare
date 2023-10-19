@@ -25,6 +25,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -44,8 +46,18 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = HealthcareApplication.class)
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@SpringBootTest(
+        classes = HealthcareApplication.class, // Specify your main application class
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb", // Use H2 in-memory database
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=password"
+})
 public class CustomerControllerTest {
 
     @MockBean
@@ -223,7 +235,7 @@ public class CustomerControllerTest {
 
         // Perform an HTTP POST request to your endpoint
         mockMvc.perform(MockMvcRequestBuilders.post("/healthcare/customers/registration")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Content-Type", "application/json")
                         .content("""
  {
  "username": "Ivanov02",

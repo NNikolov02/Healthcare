@@ -15,6 +15,11 @@ import com.example.healthcare.registration.customer.OnRegistrationCompleteEventC
 import com.example.healthcare.repository.DoctorRepository;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.validation.ObjectValidator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -115,7 +120,8 @@ public class CustomerController {
         return ResponseEntity.ok("It is deleted!");
     }
 
-    @PostMapping(value ="/registration")
+    @PostMapping(value ="/registration",produces = "application/json", consumes = "application/json")
+
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid CustomerCreateRequest customerDto,
             HttpServletRequest request, Errors errors)  {

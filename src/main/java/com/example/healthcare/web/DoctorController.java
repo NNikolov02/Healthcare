@@ -69,7 +69,7 @@ public class DoctorController {
         return new DoctorApiPage<>(doctorPage);
     }
 
-    @GetMapping(value ="/{doctorId}")
+    @GetMapping(value ="/{doctorId}", produces = MediaType.APPLICATION_JSON_VALUE,consumes =MediaType.APPLICATION_JSON_VALUE )
     public ResponseEntity<DoctorResponse>findById(@PathVariable String doctorId){
 
         Doctor doctor = doctorService.findById(doctorId);

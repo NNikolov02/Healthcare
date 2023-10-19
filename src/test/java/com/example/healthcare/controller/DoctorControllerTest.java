@@ -57,10 +57,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ActiveProfiles("test")
-@SpringBootTest
+
+
 @AutoConfigureMockMvc
-@Tag("integration")
+@ActiveProfiles("test")
+@SpringBootTest(
+        classes = HealthcareApplication.class, // Specify your main application class
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb", // Use H2 in-memory database
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=password"
+})
 public class DoctorControllerTest {
 
     @MockBean
@@ -105,7 +115,7 @@ public class DoctorControllerTest {
     }
 
     @Test
-    public void testFindById() throws Exception {
+    public void testFindById2() throws Exception {
 
         // Create a sample Customer
         Doctor doctor = Doctor.builder()
@@ -362,13 +372,33 @@ public class DoctorControllerTest {
 
         // Create a sample Customer
         mockMvc.perform(
-                        get("/healthcare/doctors/ad613e88-080d-43ca-b9ee-c52389b55c88" )
+                        get("/healthcare/doctors/41468a4a-7695-417f-be18-e939b3be54bf" )
                                 .contentType(MediaType.APPLICATION_JSON)
 
                 ).andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("Ivan102"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("Ivan2001"));
 
 
+    }
+    @Test
+    public void testFindById() throws Exception {
+        String doctorId = "41468a4a-7695-417f-be18-e939b3be54bf";
+        mockMvc.perform(MockMvcRequestBuilders.get("/healthcare/doctors/{doctorId}", doctorId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(doctorId))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("Ivan2001"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("Stamat80"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Stanatov80"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("nikinikolov2002@gmail.com"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumber").value("08842705050"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.specialty").value("heart-sergeon"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.hospitalName").value("ST. Anna"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(false))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.personPhotoId").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.availableHours[0].date").value("2023-09-22"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.availableHours[0].hours[0]").value("09:00 AM"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.availableHours[0].hours[1]").value("10:00 AM"));
     }
 
     @Test
