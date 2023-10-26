@@ -55,7 +55,7 @@ public class DoctorController {
 
 
     @GetMapping(value = "", produces = "application/json")
-    public DoctorApiPage<DoctorResponse> getAllCarts(
+    public DoctorApiPage<DoctorResponse> getAllDoctors(
             @RequestParam(required = false, defaultValue = "1") Integer currPage ){
 
 
@@ -73,9 +73,9 @@ public class DoctorController {
     public ResponseEntity<DoctorResponse>findById(@PathVariable String doctorId){
 
         Doctor doctor = doctorService.findById(doctorId);
-        UUID allPersonPhotoId = doctorService.getAllPersonPhotoIds(doctorId);
+        //UUID allPersonPhotoId = doctorService.getAllPersonPhotoIds(doctorId);
         DoctorResponse response = doctorMapper.responseFromModelOne(doctor);
-        response.setPersonPhotoIds(allPersonPhotoId);
+        //response.setPersonPhotoId(allPersonPhotoId);
 
 
 
@@ -109,7 +109,7 @@ public class DoctorController {
     public ResponseEntity<List<DoctorResponse>>findByHospitalName(@PathVariable String hospitalName){
         List<Doctor>doctors = (List<Doctor>) doctorService.findByHospitalName(hospitalName);
 
-       return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
+        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
     }
     @GetMapping(value ="/specialty/{specialty}")
     public ResponseEntity<List<DoctorResponse>>findBySpecialty(@PathVariable String specialty){
@@ -117,21 +117,13 @@ public class DoctorController {
 
         return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
     }
+
     @GetMapping("/catalogHours/{doctorUserName}")
     public ResponseEntity<List<AvailableHoursDto>>findCatalog(@PathVariable String doctorUserName){
         Doctor doctor = doctorService.findByName(doctorUserName);
-        List<AvailableHours> hours = doctor.getAvailableHours();
-        List<AvailableHoursDto> doctorHoursResponse = doctorMapper.responseFromModelHours(hours);
-        for(AvailableHoursDto availableHoursDto:doctorHoursResponse) {
-            for (AvailableHours availableHours : hours) {
-                availableHoursDto.setDate(availableHours.getDate());
-                availableHoursDto.setHours(availableHours.getHours());
-            }
-        }
-        //doctorHoursResponse.setFirstName(doctor.getFirstName());
-       // doctorHoursResponse.setLastName(doctor.getLastName());
+        List<AvailableHoursDto>doctorHours =doctorService.setAvailableHours(doctor);
 
-        return ResponseEntity.ok().body(doctorHoursResponse);
+        return ResponseEntity.ok().body(doctorHours);
     }
 
 
@@ -150,7 +142,7 @@ public class DoctorController {
 
         return ResponseEntity.ok("It is deleted!");
     }
-    @PostMapping("/registration")
+    @PostMapping(value ="/registration")
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid DoctorCreateRequest doctorDto,
             HttpServletRequest request, Errors errors)  {
@@ -161,28 +153,10 @@ public class DoctorController {
 
         Doctor create = doctorMapper.modelFromCreateRequest(doctorDto);
         List<AvailableHours>doctorHours = create.getAvailableHours();
+        String connect = doctorService.connectHours(create,doctorHours,request);
 
 
-        for(AvailableHours availableHours:doctorHours) {
-            availableHours.setDoctor(create);
-            availableHours.setFirstName(create.getFirstName());
-            availableHours.setLastName(create.getLastName());
-            availableHours.setHours(availableHours.getHours());
-
-
-
-        }
-
-        Doctor saved = doctorService.save(create);
-
-
-
-        String appUrl = request.getContextPath();
-        eventPublisher.publishEvent(new OnRegistrationCompleteEventDoctor(saved,
-                request.getLocale(), appUrl));
-
-
-        return new ResponseEntity<>("Registration Successfully!", HttpStatus.CREATED);
+        return  ResponseEntity.status(HttpStatus.CREATED).body(connect);
 
     }
     @PostMapping("photo/{doctorUserName}")
@@ -207,45 +181,9 @@ public class DoctorController {
         String firstName = doctor.getFirstName();
         String lastName = doctor.getLastName();
         List<Appointment> appointments = appointmentRepo.findAllById(UUID.fromString(appointmentId));
-        for(Customer customer:customers) {
+        String setAcc = doctorService.setApp(doctor,customers,appointments,setAccept,request);
 
-            if (customer != null && doctor != null) {
-                if (setAccept) {
-                    List<AvailableHours> availableHours = doctor.getAvailableHours();
-                    for (AvailableHours availableHours1 : availableHours) {
-                        for(Appointment appointment:appointments) {
-                            if (availableHours1.getDate().equals(appointment.getStartDate()) && availableHours1.getHours().contains(appointment.getStartTime())) {
-                                availableHours1.getHours().remove(appointment.getStartTime());
-                                doctorService.save(doctor);
-                                //appointment.setDoctor(doctor);
-                                //appointmentRepo.save(appointment);
-
-                            }
-                        }
-                    }
-                    doctor.setAvailable(false);
-                    doctorService.save(doctor);
-                    String appUrl = request.getContextPath();
-                    eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerAccept(customer, request.getLocale(), appUrl));
-                    return ResponseEntity.ok("The appointment is accepted");
-
-                } else {
-                    for (Appointment appointment : appointments) {
-
-                        String appUrl = request.getContextPath();
-                        eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerDecline(customer, request.getLocale(), appUrl));
-                        appointment.setDoctor(null);
-                        appointment.setStartTime(null);
-                        appointment.setStartDate(null);
-                        appointmentRepo.save(appointment);
-
-                        return ResponseEntity.ok("The appointment is not accepted");
-                    }
-                }
-            }
-
-            }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok().body(setAcc);
     }
 
 }

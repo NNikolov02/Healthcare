@@ -65,7 +65,7 @@ public class CustomerController {
 
 
 
-    @GetMapping(value ="{customerId}")
+    @GetMapping(value ="/{customerId}")
     public ResponseEntity<CustomerResponse>findById(@PathVariable String customerId){
 
         Customer customer = customerService.findById(customerId);
@@ -89,12 +89,12 @@ public class CustomerController {
         Doctor doctor = doctorRepo.findByLastName(doctorLastName);
         List<AvailableHours> hours = doctor.getAvailableHours();
         List<AvailableHoursDto> doctorHoursResponse = doctorMapper.responseFromModelHours(hours);
-        for(AvailableHoursDto availableHoursDto:doctorHoursResponse) {
-            for (AvailableHours availableHours : hours) {
-                availableHoursDto.setDate(availableHours.getDate());
-                availableHoursDto.setHours(availableHours.getHours());
-            }
-        }
+//        for(AvailableHoursDto availableHoursDto:doctorHoursResponse) {
+//            for (AvailableHours availableHours : hours) {
+//                availableHoursDto.setDate(availableHours.getDate());
+//                availableHoursDto.setHours(availableHours.getHours());
+//            }
+//        }
         //doctorHoursResponse.setFirstName(doctor.getFirstName());
         // doctorHoursResponse.setLastName(doctor.getLastName());
 
@@ -116,6 +116,7 @@ public class CustomerController {
     }
 
     @PostMapping(value ="/registration")
+
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid CustomerCreateRequest customerDto,
             HttpServletRequest request, Errors errors)  {
@@ -142,7 +143,7 @@ public class CustomerController {
 
     }
     @PatchMapping(value ="/{customerName}")
-    public ResponseEntity<CustomerResponse>updateCustomer(@PathVariable String customerName, @RequestBody CustomerUpdateRequest customerDto){
+    public ResponseEntity<String>updateCustomer(@PathVariable String customerName, @RequestBody CustomerUpdateRequest customerDto){
         Map<String, String> validationErrors = validator.validate(customerDto);
         if (validationErrors.size() != 0) {
             throw new InvalidObjectException("Invalid Customer Create", validationErrors);
@@ -152,9 +153,9 @@ public class CustomerController {
 
         Customer saved = customerService.save(customer);
 
-        CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
+        //CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
 
-        return ResponseEntity.status(203).body(customerResponse);
+        return ResponseEntity.ok("It is updated successfully!");
     }
 
 
