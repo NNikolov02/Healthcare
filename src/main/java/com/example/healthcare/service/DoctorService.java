@@ -1,6 +1,7 @@
 package com.example.healthcare.service;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.doctor.DoctorCreateRequest;
 import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
 import com.example.healthcare.model.*;
@@ -48,9 +49,8 @@ public class DoctorService {
     }
 
     public Doctor findById(String doctorId) {
-        return repo.findById(UUID.fromString(doctorId)).orElseThrow(() -> {
-            throw new NotFoundObjectException("Doctor Not Found", Doctor.class.getName(), doctorId);
-        });
+        return repo.findById(UUID.fromString(doctorId)).orElse(null);
+
     }
     public Doctor findByEmail(String email){
         return repo.findAllByEmail(email);
@@ -100,7 +100,9 @@ public class DoctorService {
     public void deleteByEmail(String email){
         repo.deleteByEmail(email);
     }
-    public String connectHours(Doctor create, List<AvailableHours>doctorHours, HttpServletRequest request){
+    public String connectHours(DoctorCreateRequest doctorDto, HttpServletRequest request){
+        Doctor create = doctorMapper.modelFromCreateRequest(doctorDto);
+        List<AvailableHours>doctorHours = create.getAvailableHours();
         doctorHours = create.getAvailableHours();
 
 
@@ -155,9 +157,9 @@ public class DoctorService {
         System.out.println("Creating verification token for doctor: " + doctor.getFirstName() +" "+ doctor.getLastName());
         System.out.println("Token: " + token);
     }
-    public  String setApp(Doctor doctor, List<Customer>customers, List<Appointment>appointments, boolean setAccept, HttpServletRequest request){
+    public  String setApp(Doctor doctor, Customer customer, List<Appointment>appointments, boolean setAccept, HttpServletRequest request){
 
-        for(Customer customer:customers) {
+
 
             if (customer != null && doctor != null) {
                 if (setAccept) {
@@ -173,7 +175,6 @@ public class DoctorService {
                             }
                         }
                     }
-                    doctor.setAvailable(false);
                     repo.save(doctor);
                     String appUrl = request.getContextPath();
                     eventPublisher.publishEvent(new OnDoctorCompleteEventCustomerAccept(customer, request.getLocale(), appUrl));
@@ -200,7 +201,7 @@ public class DoctorService {
                 }
             }
 
-        }
+
         return null;
     }
 }

@@ -151,9 +151,8 @@ public class DoctorController {
             throw new InvalidObjectException("Invalid Doctor Create", validationErrors);
         }
 
-        Doctor create = doctorMapper.modelFromCreateRequest(doctorDto);
-        List<AvailableHours>doctorHours = create.getAvailableHours();
-        String connect = doctorService.connectHours(create,doctorHours,request);
+
+        String connect = doctorService.connectHours(doctorDto,request);
 
 
         return  ResponseEntity.status(HttpStatus.CREATED).body(connect);
@@ -176,12 +175,12 @@ public class DoctorController {
     }
     @PostMapping ("/appointments/{appointmentId}")
     public ResponseEntity<String> acceptApp(@PathVariable String appointmentId,@RequestParam boolean setAccept, HttpServletRequest request) {
-        List<Customer> customers = (List<Customer>) customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService
+        Customer customer =  customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService
         Doctor doctor = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
         String firstName = doctor.getFirstName();
         String lastName = doctor.getLastName();
         List<Appointment> appointments = appointmentRepo.findAllById(UUID.fromString(appointmentId));
-        String setAcc = doctorService.setApp(doctor,customers,appointments,setAccept,request);
+        String setAcc = doctorService.setApp(doctor,customer,appointments,setAccept,request);
 
         return ResponseEntity.ok().body(setAcc);
     }

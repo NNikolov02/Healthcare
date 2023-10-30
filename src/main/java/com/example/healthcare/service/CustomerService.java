@@ -1,10 +1,20 @@
 package com.example.healthcare.service;
 
+import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.customer.CustomerCreateRequest;
+import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.error.NotFoundObjectException;
+import com.example.healthcare.mapping.CustomerMapper;
+import com.example.healthcare.mapping.DoctorMapper;
+import com.example.healthcare.model.AvailableHours;
 import com.example.healthcare.model.Customer;
+import com.example.healthcare.model.Doctor;
+import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
 import com.example.healthcare.repository.CustomerPagingRepository;
 import com.example.healthcare.repository.CustomerRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -14,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -22,9 +33,15 @@ public class CustomerService {
 
     @Autowired
     private CustomerRepository repo;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private CustomerMapper customerMapper;
 
     @Autowired
     private CustomerPagingRepository pagingRepo;
+    @Autowired
+    private DoctorMapper doctorMapper;
 
     public Page<Customer> fetchAll(int currentPage, int pageSize) {
         return pagingRepo.findAll(PageRequest.of(currentPage, pageSize));
@@ -35,9 +52,8 @@ public class CustomerService {
     }
 
     public Customer findById(String customerId) {
-        return repo.findById(UUID.fromString(customerId)).orElseThrow(() -> {
-            throw new NotFoundObjectException("Customer Not Found", Customer.class.getName(), customerId);
-        });
+        return repo.findById(UUID.fromString(customerId)).orElse(null);
+
     }
     public Customer findByUserName(String name){
         return repo.findCustomerByUsername(name);
@@ -51,6 +67,27 @@ public class CustomerService {
     public void deleteByName(String name){
         repo.deleteCustomerByUsername(name);
     }
+
+    public List<AvailableHoursDto> setAvailableHours(Doctor doctor){
+        List<AvailableHours> hours = doctor.getAvailableHours();
+        List<AvailableHoursDto> doctorHoursResponse = doctorMapper.responseFromModelHours(hours);
+
+        return doctorHoursResponse;
+
+    }
+    public String registerUser(CustomerCreateRequest customerDto, HttpServletRequest request){
+
+        Customer create = customerMapper.modelFromCreateRequest(customerDto);
+        Customer saved = repo.save(create);
+
+        String appUrl = request.getContextPath();
+        eventPublisher.publishEvent(new OnRegistrationCompleteEventCustomer(saved,
+                request.getLocale(), appUrl));
+
+
+        return "Registration Successfully!";
+
+    }
     private Date calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Timestamp(cal.getTime().getTime()));
@@ -60,5 +97,15 @@ public class CustomerService {
     public void createVerificationToken(Customer customer, String token) {
         System.out.println("Creating verification token for customer: " + customer.getUsername());
         System.out.println("Token: " + token);
+    }
+
+    public String updateCustomer(Customer customer, CustomerUpdateRequest customerDto){
+        customerMapper.updateModelFromDto(customerDto,customer);
+
+        Customer saved = repo.save(customer);
+
+        return "It is updated successfully!";
+
+
     }
 }

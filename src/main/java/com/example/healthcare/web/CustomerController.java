@@ -39,8 +39,6 @@ public class CustomerController {
     @Autowired
     private DoctorRepository doctorRepo;
     @Autowired
-    private DoctorMapper doctorMapper;
-    @Autowired
     private CustomerMapper customerMapper;
     @Autowired
     private ObjectValidator validator;
@@ -87,18 +85,9 @@ public class CustomerController {
     @GetMapping("/catalogHours/{doctorLastName}")
     public ResponseEntity<List<AvailableHoursDto>>findCatalog(@PathVariable String doctorLastName){
         Doctor doctor = doctorRepo.findByLastName(doctorLastName);
-        List<AvailableHours> hours = doctor.getAvailableHours();
-        List<AvailableHoursDto> doctorHoursResponse = doctorMapper.responseFromModelHours(hours);
-//        for(AvailableHoursDto availableHoursDto:doctorHoursResponse) {
-//            for (AvailableHours availableHours : hours) {
-//                availableHoursDto.setDate(availableHours.getDate());
-//                availableHoursDto.setHours(availableHours.getHours());
-//            }
-//        }
-        //doctorHoursResponse.setFirstName(doctor.getFirstName());
-        // doctorHoursResponse.setLastName(doctor.getLastName());
+        List<AvailableHoursDto>availableHoursDtos = customerService.setAvailableHours(doctor);
 
-        return ResponseEntity.ok().body(doctorHoursResponse);
+        return ResponseEntity.ok().body(availableHoursDtos);
     }
 
     @DeleteMapping(value ="{customerId}")
@@ -116,7 +105,6 @@ public class CustomerController {
     }
 
     @PostMapping(value ="/registration")
-
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid CustomerCreateRequest customerDto,
             HttpServletRequest request, Errors errors)  {
@@ -124,22 +112,10 @@ public class CustomerController {
         if (validationErrors.size() != 0) {
             throw new InvalidObjectException("Invalid Customer Create", validationErrors);
         }
-
-        Customer create = customerMapper.modelFromCreateRequest(customerDto);
-        Customer saved = customerService.save(create);
+        String connect = customerService.registerUser(customerDto,request);
 
 
-
-        String appUrl = request.getContextPath();
-        eventPublisher.publishEvent(new OnRegistrationCompleteEventCustomer(saved,
-                request.getLocale(), appUrl));
-
-        //CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
-
-
-
-
-        return new ResponseEntity<>("Registration Successfully!", HttpStatus.CREATED);
+        return  ResponseEntity.status(HttpStatus.CREATED).body(connect);
 
     }
     @PatchMapping(value ="/{customerName}")
@@ -149,13 +125,11 @@ public class CustomerController {
             throw new InvalidObjectException("Invalid Customer Create", validationErrors);
         }
         Customer customer = customerService.findByUserName(customerName);
-        customerMapper.updateModelFromDto(customerDto,customer);
-
-        Customer saved = customerService.save(customer);
+        String customerUpdate  = customerService.updateCustomer(customer,customerDto);
 
         //CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
 
-        return ResponseEntity.ok("It is updated successfully!");
+        return ResponseEntity.ok().body(customerUpdate);
     }
 
 

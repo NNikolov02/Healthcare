@@ -76,9 +76,8 @@ public class CustomerRepositoryTest {
         for(Appointment appointment:appointments) {
             appointment.setCustomer(customer);
             entityManager.persistAndFlush(appointment);
-            List<Customer> availableCustomers = customerRepo.findByAppointmentId(appointment.getId());
-            assertThat(availableCustomers).contains(customer);
-            for(Customer customer1:availableCustomers)
+            Customer customer1 = customerRepo.findByAppointmentId(appointment.getId());
+
 
                 assertEquals("Ivan",customer1.getUsername());
         }
