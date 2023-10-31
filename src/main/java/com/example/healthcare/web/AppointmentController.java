@@ -7,6 +7,7 @@ import com.example.healthcare.dto.appointment.AppointmentUpdateRequest;
 import com.example.healthcare.dto.doctor.DoctorAppointmentResponse;
 import com.example.healthcare.dto.doctor.SetDoctorRequest;
 import com.example.healthcare.error.InvalidObjectException;
+import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.mapping.AppointmentMapping;
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/healthcare/appointments")
@@ -120,25 +122,26 @@ public class AppointmentController {
 
     }
     @PatchMapping("/{appointmentId}")
-    public ResponseEntity<AppointmentResponse>updateAppointment(@PathVariable String appointmentId, @RequestBody AppointmentUpdateRequest appointmentDto){
+    public ResponseEntity<String>updateAppointment(@PathVariable String appointmentId, @RequestBody AppointmentUpdateRequest appointmentDto){
         Map<String, String> validationErrors = validator.validate(appointmentDto);
         if (validationErrors.size() != 0) {
             throw new InvalidObjectException("Invalid Appointment Update", validationErrors);
 
         }
         Appointment appointment = appointmentService.findById(appointmentId);
-        appointmentMapping.updateModelFromDto(appointmentDto,appointment);
-        Appointment saved = appointmentService.save(appointment);
+        String updateAppointment = appointmentService.updateAppointment(appointment,appointmentDto);
 
-        AppointmentResponse appointmentResponse =appointmentMapping.responseFromModelOne(saved);
+        //AppointmentResponse appointmentResponse =appointmentMapping.responseFromModelOne(saved);
 
 
-        return ResponseEntity.status(203).body(appointmentResponse);
+        return ResponseEntity.ok().body(updateAppointment);
 
     }
     @PutMapping("/{appointmentId}")
     public ResponseEntity<String> chooseDoctor(@PathVariable String appointmentId, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
-        String appointment = appointmentService.setAppointmentDoctor(appointmentId, doctorDto.getSetFistName()
+        Appointment appointment1 = appointmentService.findById(appointmentId);
+        Doctor doctor1 = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
+        String appointment = appointmentService.setAppointmentDoctor(appointment1,doctor1, doctorDto.getSetFistName()
                 , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime(),request);
 
 

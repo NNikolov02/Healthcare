@@ -2,6 +2,8 @@ package com.example.healthcare.service;
 
 import com.example.healthcare.dto.appointment.AppointmentCreateRequest;
 import com.example.healthcare.dto.appointment.AppointmentResponse;
+import com.example.healthcare.dto.appointment.AppointmentUpdateRequest;
+import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.mapping.AppointmentMapping;
 import com.example.healthcare.model.Appointment;
@@ -54,9 +56,8 @@ public class AppointmentService {
         return repo.save(appointment);
     }
     public Appointment findById(String appointmentId) {
-        return repo.findById(UUID.fromString(appointmentId)).orElseThrow(() -> {
-            throw new NotFoundObjectException("Appointment Not Found", Appointment.class.getName(), appointmentId);
-        });
+        return repo.findById(UUID.fromString(appointmentId)).orElse(null);
+
     }
     public Appointment findByCustomerName(String customerName){
         return repo.findByCustomersName(customerName);
@@ -66,25 +67,19 @@ public class AppointmentService {
         repo.deleteAllAppointmentsByCustomerUsername(customerName);
     }
 
-    public String setAppointmentDoctor(String appointmentId, String firstName, String lastName, LocalDate date, String time, HttpServletRequest request) {
-        Appointment appointment = repo.findById(UUID.fromString(appointmentId)).orElseThrow(() -> {
-            throw new NotFoundObjectException("Appointment Not Found", Appointment.class.getName(), appointmentId);
-        });
-        Doctor doctor1 = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
+    public String setAppointmentDoctor(Appointment appointment,Doctor doctor1, String firstName, String lastName, LocalDate date, String time, HttpServletRequest request) {
 
         if (appointment != null) {
-            // Check if the appointment already has a doctor
 
             if (appointment.getDoctor() == null) {
-                Doctor doctor = doctorRepo.findByFirstNameAndLastName(firstName, lastName);
 
-                if (doctor != null) {
-                    List<AvailableHours> availableHours = doctor.getAvailableHours();
+                if (doctor1 != null) {
+                    List<AvailableHours> availableHours = doctor1.getAvailableHours();
                     for (AvailableHours availableHours1 : availableHours) {
                         if (availableHours1.getDate().equals(date) && availableHours1.getHours().contains(time)) {
                             appointment.setStartDate(date);
                             appointment.setStartTime(time);
-                            appointment.setDoctor(doctor);
+                            appointment.setDoctor(doctor1);
                             repo.save(appointment);
 
                         }
@@ -95,12 +90,10 @@ public class AppointmentService {
                 }
 
 
-
-                return "The doctor is busy at that time or not found!";
             }
         }
 
-        return null;
+        return "The doctor is busy at that time or not found!";
     }
     private Date calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();
@@ -138,6 +131,15 @@ public class AppointmentService {
 
         }
         return null;
+    }
+    public String updateAppointment(Appointment appointment, AppointmentUpdateRequest appointmentDto){
+        appointmentMapping.updateModelFromDto(appointmentDto,appointment);
+
+        Appointment saved = repo.save(appointment);
+
+        return "It is updated successfully!";
+
+
     }
 
 
