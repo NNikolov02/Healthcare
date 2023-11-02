@@ -1,11 +1,14 @@
 package com.example.healthcare.service;
 
+import com.example.healthcare.dto.SetRatingRequest;
 import com.example.healthcare.dto.customer.CustomerCreateRequest;
 import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.mapping.CustomerMapper;
 import com.example.healthcare.mapping.DoctorMapper;
+import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
 import com.example.healthcare.model.Doctor;
+import com.example.healthcare.model.Rating;
 import com.example.healthcare.repository.CustomerPagingRepository;
 import com.example.healthcare.repository.CustomerRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -176,6 +179,43 @@ public class CustomerServiceTest {
 
 
     }
+    @Test
+    public void testRating(){
+        SetRatingRequest request = SetRatingRequest.builder()
+                .rating(5)
+                .build();
+        List<Rating> ratings = new ArrayList<>();
+        Rating newRating = Rating.builder()
+                .rating(request.getRating())
+                .build();
+        Rating newRating1 = Rating.builder()
+                .rating(3)
+                .build();
+        ratings.add(newRating);
+        ratings.add(newRating1);
+
+        Customer customer = Customer.builder()
+                .username("Ivan")
+                .build();
+        Doctor doctor = Doctor.builder()
+                .firstName("Gosho")
+                .lastName("Spasov")
+                .ratings(ratings)
+                .build();
+        Appointment appointment = Appointment.builder()
+                .reason("random")
+                .customer(customer)
+                .doctor(doctor)
+                .build();
+
+
+
+        String rating = customerService.rating(appointment,doctor,request);
+
+        assertEquals("If it is equal","Rated successfully!",rating);
+        assertEquals("If it is equal",doctor.getRating(),4);
+    }
+
 
 
 

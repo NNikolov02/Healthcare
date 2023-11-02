@@ -226,12 +226,12 @@ public class AppointmentServiceTest {
         when(doctorRepo.findByAppointmentId(appointment.getId())).thenReturn(doctor);
         when(repo.save(appointment)).thenReturn(appointment);
 
-        String chooseDoctor = appointmentService.setAppointmentDoctor(appointment,doctor,doctorDto.getSetFistName(),doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime(),request);
+        String chooseDoctor = appointmentService.setAppointmentDoctor(appointment,doctor,doctorDto.getSetDate(),doctorDto.getSetTime(),request);
 
         assertEquals("if it is equal","It is successfully",chooseDoctor);
 
-        String chooseDoctor1 = appointmentService.setAppointmentDoctor(appointment,doctor,doctorDto1.getSetFistName(),doctorDto1.getSetLastName(),doctorDto1.getSetDate(),doctorDto1.getSetTime(),request);
-        assertEquals("if it is equal","The doctor is busy at that time or not found!",chooseDoctor1);
+     String chooseDoctor1 = appointmentService.setAppointmentDoctor(appointment,doctor,doctorDto1.getSetDate(),doctorDto1.getSetTime(),request);
+       assertEquals("if it is equal","The doctor is busy at that time",chooseDoctor1);
     }
     @Test
     public void testUpdateAppointment(){

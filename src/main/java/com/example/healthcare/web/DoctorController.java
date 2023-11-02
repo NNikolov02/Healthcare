@@ -1,6 +1,7 @@
 package com.example.healthcare.web;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.SetRatingRequest;
 import com.example.healthcare.dto.doctor.*;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
@@ -184,5 +185,6 @@ public class DoctorController {
 
         return ResponseEntity.ok().body(setAcc);
     }
+
 
 }

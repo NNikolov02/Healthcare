@@ -170,6 +170,25 @@ public class CustomerEndPointTest {
 
 
     }
+    @Test
+    public void testRatingDoctor() throws Exception {
+
+        // Perform an HTTP POST request to your endpoint
+        mockMvc.perform(MockMvcRequestBuilders.put("/healthcare/customers/NNikolov03/rating/Stamat100/Stanatov100")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+ {
+ 
+            "rating": "5"
+            
+            }
+"""))
+                .andExpect(status().is(200))
+                .andExpect(content().string("Rated successfully!"));
+
+
+
+    }
 
 
 }

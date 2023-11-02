@@ -21,6 +21,7 @@ public interface DoctorRepository extends CrudRepository<Doctor, UUID> {
     Doctor findAllByEmail(String email);
     void deleteByEmail(String email);
     Doctor findByFirstNameAndLastName(String firstName,String lastName);
+
     @Query("SELECT DISTINCT d FROM Doctor d JOIN d.appointments a JOIN a.customer c WHERE c.username = :customerName")
     Doctor findDoctorsByCustomerName(@Param("customerName") String customerName);
     Doctor findByUsername(String userName);

@@ -1,6 +1,8 @@
 package com.example.healthcare.dto.doctor;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.RatingDto;
+import com.example.healthcare.model.Rating;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,4 +27,5 @@ public class DoctorResponse {
     private boolean available;
     private UUID personPhotoIds;
     private List<AvailableHoursDto> availableHours;
+    private Integer rating;
 }

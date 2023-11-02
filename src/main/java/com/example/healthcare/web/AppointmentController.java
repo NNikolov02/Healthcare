@@ -140,9 +140,8 @@ public class AppointmentController {
     @PutMapping("/{appointmentId}")
     public ResponseEntity<String> chooseDoctor(@PathVariable String appointmentId, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
         Appointment appointment1 = appointmentService.findById(appointmentId);
-        Doctor doctor1 = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
-        String appointment = appointmentService.setAppointmentDoctor(appointment1,doctor1, doctorDto.getSetFistName()
-                , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime(),request);
+        Doctor doctor = doctorRepo.findByFirstNameAndLastName(doctorDto.getSetFistName(),doctorDto.getSetLastName());
+        String appointment = appointmentService.setAppointmentDoctor(appointment1,doctor,doctorDto.getSetDate(),doctorDto.getSetTime(),request);
 
 
         return ResponseEntity.ok().body(appointment);

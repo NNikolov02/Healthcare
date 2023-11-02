@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
@@ -52,48 +53,59 @@ public class AppointmentService {
         return pagingRepo.findAll(PageRequest.of(currentPage, pageSize));
     }
 
-    public Appointment save(Appointment appointment){
+    public Appointment save(Appointment appointment) {
         return repo.save(appointment);
     }
+
     public Appointment findById(String appointmentId) {
         return repo.findById(UUID.fromString(appointmentId)).orElse(null);
 
     }
-    public Appointment findByCustomerName(String customerName){
+
+    public Appointment findByCustomerName(String customerName) {
         return repo.findByCustomersName(customerName);
     }
 
-    public void deleteByName(String customerName){
+    public void deleteByName(String customerName) {
         repo.deleteAllAppointmentsByCustomerUsername(customerName);
     }
 
-    public String setAppointmentDoctor(Appointment appointment,Doctor doctor1, String firstName, String lastName, LocalDate date, String time, HttpServletRequest request) {
+    public String setAppointmentDoctor(Appointment appointment, Doctor doctor, LocalDate date, String time, HttpServletRequest request) {
+
+
 
         if (appointment != null) {
+            // Check if the appointment already has a doctor
 
-            if (appointment.getDoctor() == null) {
+                if (doctor != null) {
+                    List<AvailableHours> availableHours = doctor.getAvailableHours();
+                    boolean isDoctorAvailable = false; // Add a flag to track doctor's availability
 
-                if (doctor1 != null) {
-                    List<AvailableHours> availableHours = doctor1.getAvailableHours();
                     for (AvailableHours availableHours1 : availableHours) {
                         if (availableHours1.getDate().equals(date) && availableHours1.getHours().contains(time)) {
+                            isDoctorAvailable = true;
                             appointment.setStartDate(date);
                             appointment.setStartTime(time);
-                            appointment.setDoctor(doctor1);
+                            appointment.setDoctor(doctor);
                             repo.save(appointment);
-
+                            break;
                         }
                     }
-                    String appUrl1 = request.getContextPath();
-                    eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(appointment, request.getLocale(), appUrl1));
-                    return "It is successfully";
+
+                    if (isDoctorAvailable) {
+                        String appUrl1 = request.getContextPath();
+                        eventPublisher.publishEvent(new OnRegistrationCompleteEventAppDoc(appointment, request.getLocale(), appUrl1));
+                        return "It is successfully";
+                    } else {
+                        return "The doctor is busy at that time";
+                    }
+                } else {
+                    return "The doctor is not found"; // Handle case when the requested doctor is not found
                 }
-
-
             }
-        }
 
-        return "The doctor is busy at that time or not found!";
+
+        return null;
     }
     private Date calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();
@@ -141,6 +153,7 @@ public class AppointmentService {
 
 
     }
+
 
 
 }

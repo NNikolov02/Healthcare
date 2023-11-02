@@ -1,6 +1,7 @@
 package com.example.healthcare.web;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.SetRatingRequest;
 import com.example.healthcare.dto.customer.CustomerApiPage;
 import com.example.healthcare.dto.customer.CustomerCreateRequest;
 import com.example.healthcare.dto.customer.CustomerResponse;
@@ -8,11 +9,10 @@ import com.example.healthcare.dto.customer.CustomerUpdateRequest;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.CustomerMapper;
 import com.example.healthcare.mapping.DoctorMapper;
-import com.example.healthcare.model.AvailableHours;
-import com.example.healthcare.model.Customer;
-import com.example.healthcare.model.Doctor;
+import com.example.healthcare.model.*;
 import com.example.healthcare.registration.customer.OnRegistrationCompleteEventCustomer;
 import com.example.healthcare.repository.DoctorRepository;
+import com.example.healthcare.service.AppointmentService;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.validation.ObjectValidator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/healthcare/customers")
@@ -44,6 +45,8 @@ public class CustomerController {
     private ObjectValidator validator;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private AppointmentService appointmentService;
 
     @GetMapping(value = "", produces = "application/json")
     public CustomerApiPage<CustomerResponse> getAllCarts(
@@ -130,6 +133,15 @@ public class CustomerController {
         //CustomerResponse customerResponse = customerMapper.responseFromModelOne(saved);
 
         return ResponseEntity.ok().body(customerUpdate);
+    }
+    @PutMapping("{customerName}/rating/{doctorFirstName}/{doctorLastName}")
+    public ResponseEntity<String>setRating(@PathVariable String customerName,@PathVariable String doctorLastName ,@PathVariable  String doctorFirstName, @RequestBody SetRatingRequest request){
+        Doctor doctor = doctorRepo.findByFirstNameAndLastName(doctorFirstName,doctorLastName);
+        Appointment appointment = appointmentService.findByCustomerName(customerName);
+        String rating = customerService.rating(appointment,doctor,request);
+
+
+        return ResponseEntity.ok().body(rating);
     }
 
 
