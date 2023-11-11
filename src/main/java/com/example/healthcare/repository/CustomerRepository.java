@@ -13,11 +13,14 @@ import java.util.UUID;
 @Repository
 public interface CustomerRepository extends CrudRepository<Customer, UUID> {
 
+    Customer findByEmail(String email);
+
     Customer findCustomerByUsername(String name);
     void deleteCustomerByUsername(String name);
 
     @Query("SELECT DISTINCT c FROM Customer c JOIN c.appointments a WHERE a.doctor.username= :doctorUsername")
     List<Customer> findAllCustomersByDoctorUsername(@Param("doctorUsername") String doctorUsername);
     @Query("SELECT DISTINCT c FROM Customer c JOIN c.appointments a WHERE a.id= :appointmentId")
-    List<Customer> findByAppointmentId(@Param("appointmentId")UUID appointmentId);
+    Customer findByAppointmentId(@Param("appointmentId")UUID appointmentId);
 }
+

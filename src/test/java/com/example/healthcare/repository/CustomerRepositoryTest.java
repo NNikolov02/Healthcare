@@ -2,14 +2,10 @@ package com.example.healthcare.repository;
 
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
-import com.example.healthcare.model.Doctor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@AutoConfigureTestDatabase(replace = Replace.NONE)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CustomerRepositoryTest {
 
     @Autowired
@@ -80,9 +76,8 @@ public class CustomerRepositoryTest {
         for(Appointment appointment:appointments) {
             appointment.setCustomer(customer);
             entityManager.persistAndFlush(appointment);
-            List<Customer> availableCustomers = customerRepo.findByAppointmentId(appointment.getId());
-            assertThat(availableCustomers).contains(customer);
-            for(Customer customer1:availableCustomers)
+            Customer customer1 = customerRepo.findByAppointmentId(appointment.getId());
+
 
                 assertEquals("Ivan",customer1.getUsername());
         }

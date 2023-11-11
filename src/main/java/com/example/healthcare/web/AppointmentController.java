@@ -7,6 +7,7 @@ import com.example.healthcare.dto.appointment.AppointmentUpdateRequest;
 import com.example.healthcare.dto.doctor.DoctorAppointmentResponse;
 import com.example.healthcare.dto.doctor.SetDoctorRequest;
 import com.example.healthcare.error.InvalidObjectException;
+import com.example.healthcare.error.NotFoundObjectException;
 import com.example.healthcare.mapping.AppointmentMapping;
 import com.example.healthcare.model.Appointment;
 import com.example.healthcare.model.Customer;
@@ -25,11 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/healthcare/appointments")
@@ -104,60 +107,42 @@ public class AppointmentController {
 
     }
 
-    @PostMapping("create/{name}")
+    @PostMapping("/create/{name}")
     public ResponseEntity<AppointmentResponse> createAppointment(@RequestBody AppointmentCreateRequest appointmentDto,HttpServletRequest request,
-                                                          @PathVariable String name) {
+                                                                 @PathVariable String name) {
         Map<String, String> validationErrors = validator.validate(appointmentDto);
         if (validationErrors.size() != 0) {
             throw new InvalidObjectException("Invalid Appointment Create", validationErrors);
         }
-
-
         Customer existingCustomer = customerService.findByUserName(name);
 
-        if (existingCustomer != null) {
+        AppointmentResponse cartResponse = appointmentService.createApp(existingCustomer,appointmentDto,request);
 
-            Appointment create = appointmentMapping.modelFromCreateRequest(appointmentDto);
-            create.setCreateTime(LocalDate.now());
-            create.setCustomer(existingCustomer);
-            //create.setEndTime(create.getStartTime().plusHours(1).plusMinutes(30));
-
-            //existingCustomer.getCarts().add(create);
-
-            Appointment saved = appointmentService.save(create);
-
-            AppointmentResponse cartResponse = appointmentMapping.responseFromModelOne(saved);
-
-
-            String appUrl = request.getContextPath();
-            eventPublisher.publishEvent(new OnRegistrationCompleteEventApp(saved,
-                    request.getLocale(), appUrl));
 
             return ResponseEntity.status(201).body(cartResponse);
-        }
-        return ResponseEntity.noContent().build();
+
     }
-    @PatchMapping("/{customerName}")
-    public ResponseEntity<AppointmentResponse>updateAppointment(@PathVariable String customerName, @RequestBody AppointmentUpdateRequest appointmentDto){
+    @PatchMapping("/{appointmentId}")
+    public ResponseEntity<String>updateAppointment(@PathVariable String appointmentId, @RequestBody AppointmentUpdateRequest appointmentDto){
         Map<String, String> validationErrors = validator.validate(appointmentDto);
         if (validationErrors.size() != 0) {
             throw new InvalidObjectException("Invalid Appointment Update", validationErrors);
 
         }
-        Appointment appointment = appointmentService.findByCustomerName(customerName);
-        appointmentMapping.updateModelFromDto(appointmentDto,appointment);
-        Appointment saved = appointmentService.save(appointment);
+        Appointment appointment = appointmentService.findById(appointmentId);
+        String updateAppointment = appointmentService.updateAppointment(appointment,appointmentDto);
 
-        AppointmentResponse appointmentResponse =appointmentMapping.responseFromModelOne(saved);
+        //AppointmentResponse appointmentResponse =appointmentMapping.responseFromModelOne(saved);
 
 
-        return ResponseEntity.status(203).body(appointmentResponse);
+        return ResponseEntity.ok().body(updateAppointment);
 
     }
     @PutMapping("/{appointmentId}")
     public ResponseEntity<String> chooseDoctor(@PathVariable String appointmentId, @RequestBody SetDoctorRequest doctorDto,HttpServletRequest request) {
-        String appointment = appointmentService.setAppointmentDoctor(appointmentId, doctorDto.getSetFistName()
-                , doctorDto.getSetLastName(),doctorDto.getSetDate(),doctorDto.getSetTime(),request);
+        Appointment appointment1 = appointmentService.findById(appointmentId);
+        Doctor doctor = doctorRepo.findByFirstNameAndLastName(doctorDto.getSetFistName(),doctorDto.getSetLastName());
+        String appointment = appointmentService.setAppointmentDoctor(appointment1,doctor,doctorDto.getSetDate(),doctorDto.getSetTime(),request);
 
 
         return ResponseEntity.ok().body(appointment);

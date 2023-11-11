@@ -50,5 +50,11 @@ public class Doctor {
     @JsonBackReference
     private List<Appointment> appointments;
 
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<Rating>ratings;
+
+    private Integer rating;
+
 
 }

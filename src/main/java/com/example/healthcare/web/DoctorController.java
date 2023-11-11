@@ -1,6 +1,7 @@
 package com.example.healthcare.web;
 
 import com.example.healthcare.dto.AvailableHoursDto;
+import com.example.healthcare.dto.SetRatingRequest;
 import com.example.healthcare.dto.doctor.*;
 import com.example.healthcare.error.InvalidObjectException;
 import com.example.healthcare.mapping.DoctorMapper;
@@ -55,7 +56,7 @@ public class DoctorController {
 
 
     @GetMapping(value = "", produces = "application/json")
-    public DoctorApiPage<DoctorResponse> getAllCarts(
+    public DoctorApiPage<DoctorResponse> getAllDoctors(
             @RequestParam(required = false, defaultValue = "1") Integer currPage ){
 
 
@@ -69,7 +70,7 @@ public class DoctorController {
         return new DoctorApiPage<>(doctorPage);
     }
 
-    @GetMapping(value ="/{doctorId}", produces = MediaType.APPLICATION_JSON_VALUE,consumes =MediaType.APPLICATION_JSON_VALUE )
+    @GetMapping(value ="/{doctorId}")
     public ResponseEntity<DoctorResponse>findById(@PathVariable String doctorId){
 
         Doctor doctor = doctorService.findById(doctorId);
@@ -96,20 +97,26 @@ public class DoctorController {
         return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
     }
 
-    @GetMapping(value ="/available/{available}")
-    public ResponseEntity<List<DoctorResponse>>findTheAvailable(@PathVariable boolean available){
-
-        List<Doctor>doctors = (List<Doctor>) doctorService.findByAvailable(available);
-
-        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
-
-    }
+//    @GetMapping(value ="/available/{available}")
+//    public ResponseEntity<List<DoctorResponse>>findTheAvailable(@PathVariable boolean available){
+//
+//        List<Doctor>doctors = (List<Doctor>) doctorService.findByAvailable(available);
+//
+//        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
+//
+//    }
 
     @GetMapping(value ="/hospital/{hospitalName}")
     public ResponseEntity<List<DoctorResponse>>findByHospitalName(@PathVariable String hospitalName){
         List<Doctor>doctors = (List<Doctor>) doctorService.findByHospitalName(hospitalName);
 
-       return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
+        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
+    }
+    @GetMapping(value ="/specialty/{specialty}")
+    public ResponseEntity<List<DoctorResponse>>findBySpecialty(@PathVariable String specialty){
+        List<Doctor>doctors = (List<Doctor>) doctorService.findBySpecialty(specialty);
+
+        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
     }
 
     @GetMapping("/catalogHours/{doctorUserName}")
@@ -136,7 +143,7 @@ public class DoctorController {
 
         return ResponseEntity.ok("It is deleted!");
     }
-    @PostMapping("/registration")
+    @PostMapping(value ="/registration")
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid DoctorCreateRequest doctorDto,
             HttpServletRequest request, Errors errors)  {
@@ -145,15 +152,14 @@ public class DoctorController {
             throw new InvalidObjectException("Invalid Doctor Create", validationErrors);
         }
 
-        Doctor create = doctorMapper.modelFromCreateRequest(doctorDto);
-        List<AvailableHours>doctorHours = create.getAvailableHours();
-        String connect = doctorService.connectHours(create,doctorHours,request);
+
+        String connect = doctorService.connectHours(doctorDto,request);
 
 
-        return  ResponseEntity.ok().body(connect);
+        return  ResponseEntity.status(HttpStatus.CREATED).body(connect);
 
     }
-    @PostMapping("photo/{doctorUserName}")
+    @PostMapping("/photo/{doctorUserName}")
     public ResponseEntity<String> handleImageUpload(@RequestParam("image") MultipartFile file,
                                                     RedirectAttributes redirectAttributes,@PathVariable String doctorUserName) throws IOException {
         Doctor doctor = doctorService.findByName(doctorUserName);
@@ -170,14 +176,15 @@ public class DoctorController {
     }
     @PostMapping ("/appointments/{appointmentId}")
     public ResponseEntity<String> acceptApp(@PathVariable String appointmentId,@RequestParam boolean setAccept, HttpServletRequest request) {
-        List<Customer> customers = (List<Customer>) customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService
+        Customer customer =  customerRepo.findByAppointmentId(UUID.fromString(appointmentId)); // Change to customerService
         Doctor doctor = doctorRepo.findByAppointmentId(UUID.fromString(appointmentId));
         String firstName = doctor.getFirstName();
         String lastName = doctor.getLastName();
         List<Appointment> appointments = appointmentRepo.findAllById(UUID.fromString(appointmentId));
-        String setAcc = doctorService.setApp(doctor,customers,appointments,setAccept,request);
+        String setAcc = doctorService.setApp(doctor,customer,appointments,setAccept,request);
 
         return ResponseEntity.ok().body(setAcc);
     }
+
 
 }
