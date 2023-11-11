@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface CustomerRepository extends CrudRepository<Customer, UUID> {
 
+    Customer findByEmail(String email);
+
     Customer findCustomerByUsername(String name);
     void deleteCustomerByUsername(String name);
 

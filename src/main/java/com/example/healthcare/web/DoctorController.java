@@ -97,14 +97,14 @@ public class DoctorController {
         return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
     }
 
-    @GetMapping(value ="/available/{available}")
-    public ResponseEntity<List<DoctorResponse>>findTheAvailable(@PathVariable boolean available){
-
-        List<Doctor>doctors = (List<Doctor>) doctorService.findByAvailable(available);
-
-        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
-
-    }
+//    @GetMapping(value ="/available/{available}")
+//    public ResponseEntity<List<DoctorResponse>>findTheAvailable(@PathVariable boolean available){
+//
+//        List<Doctor>doctors = (List<Doctor>) doctorService.findByAvailable(available);
+//
+//        return ResponseEntity.ok(doctorMapper.responseFromModelList(doctors));
+//
+//    }
 
     @GetMapping(value ="/hospital/{hospitalName}")
     public ResponseEntity<List<DoctorResponse>>findByHospitalName(@PathVariable String hospitalName){
@@ -159,7 +159,7 @@ public class DoctorController {
         return  ResponseEntity.status(HttpStatus.CREATED).body(connect);
 
     }
-    @PostMapping("photo/{doctorUserName}")
+    @PostMapping("/photo/{doctorUserName}")
     public ResponseEntity<String> handleImageUpload(@RequestParam("image") MultipartFile file,
                                                     RedirectAttributes redirectAttributes,@PathVariable String doctorUserName) throws IOException {
         Doctor doctor = doctorService.findByName(doctorUserName);

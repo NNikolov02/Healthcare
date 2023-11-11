@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -31,6 +32,8 @@ import java.util.UUID;
 @Component
 @Service
 public class CustomerService {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CustomerRepository repo;
@@ -78,18 +81,20 @@ public class CustomerService {
         return doctorHoursResponse;
 
     }
-    public String registerUser(CustomerCreateRequest customerDto, HttpServletRequest request){
+    public String registerUser(CustomerCreateRequest customerDto, HttpServletRequest request) {
+
+
 
         Customer create = customerMapper.modelFromCreateRequest(customerDto);
+//        String rawPassword = create.getPassword();
+//        String encodedPassword = passwordEncoder.encode(rawPassword);
+//        create.setPassword(encodedPassword);
         Customer saved = repo.save(create);
 
         String appUrl = request.getContextPath();
-        eventPublisher.publishEvent(new OnRegistrationCompleteEventCustomer(saved,
-                request.getLocale(), appUrl));
-
+        eventPublisher.publishEvent(new OnRegistrationCompleteEventCustomer(saved, request.getLocale(), appUrl));
 
         return "Registration Successfully!";
-
     }
     private Date calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();

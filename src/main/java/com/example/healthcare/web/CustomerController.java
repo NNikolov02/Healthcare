@@ -15,7 +15,11 @@ import com.example.healthcare.repository.DoctorRepository;
 import com.example.healthcare.service.AppointmentService;
 import com.example.healthcare.service.CustomerService;
 import com.example.healthcare.validation.ObjectValidator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +55,7 @@ public class CustomerController {
     private ApplicationEventPublisher eventPublisher;
     @Autowired
     private AppointmentService appointmentService;
-
+//    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping(value = "", produces = "application/json")
     public CustomerApiPage<CustomerResponse> getAllCarts(
             @RequestParam(required = false, defaultValue = "1") Integer currPage ){
@@ -67,6 +75,7 @@ public class CustomerController {
 
 
     @GetMapping(value ="/{customerId}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CustomerResponse>findById(@PathVariable String customerId){
 
         Customer customer = customerService.findById(customerId);
@@ -77,6 +86,7 @@ public class CustomerController {
     }
 
     @GetMapping(value ="/name/{customerName}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CustomerResponse>findByUserName(@PathVariable String customerName){
 
         Customer customer = customerService.findByUserName(customerName);
@@ -86,6 +96,7 @@ public class CustomerController {
         return ResponseEntity.ok().body(customerResponse);
     }
     @GetMapping("/catalogHours/{doctorLastName}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<AvailableHoursDto>>findCatalog(@PathVariable String doctorLastName){
         Doctor doctor = doctorRepo.findByLastName(doctorLastName);
         List<AvailableHoursDto>availableHoursDtos = customerService.setAvailableHours(doctor);
@@ -93,7 +104,8 @@ public class CustomerController {
         return ResponseEntity.ok().body(availableHoursDtos);
     }
 
-    @DeleteMapping(value ="{customerId}")
+    @DeleteMapping(value ="/{customerId}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String> deleteById(@PathVariable String customerId){
         customerService.deleteById(customerId);
 
@@ -101,6 +113,7 @@ public class CustomerController {
 
     }
     @DeleteMapping(value ="/name/{customerName}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String>deleteByName(@PathVariable String customerName){
         customerService.deleteByName(customerName);
 
@@ -108,6 +121,7 @@ public class CustomerController {
     }
 
     @PostMapping(value ="/registration")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String> createUserAndRegister(
             @RequestBody @Valid CustomerCreateRequest customerDto,
             HttpServletRequest request, Errors errors)  {
@@ -122,6 +136,7 @@ public class CustomerController {
 
     }
     @PatchMapping(value ="/{customerName}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String>updateCustomer(@PathVariable String customerName, @RequestBody CustomerUpdateRequest customerDto){
         Map<String, String> validationErrors = validator.validate(customerDto);
         if (validationErrors.size() != 0) {
@@ -134,7 +149,8 @@ public class CustomerController {
 
         return ResponseEntity.ok().body(customerUpdate);
     }
-    @PutMapping("{customerName}/rating/{doctorFirstName}/{doctorLastName}")
+    @PutMapping("/{customerName}/rating/{doctorFirstName}/{doctorLastName}")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String>setRating(@PathVariable String customerName,@PathVariable String doctorLastName ,@PathVariable  String doctorFirstName, @RequestBody SetRatingRequest request){
         Doctor doctor = doctorRepo.findByFirstNameAndLastName(doctorFirstName,doctorLastName);
         Appointment appointment = appointmentService.findByCustomerName(customerName);
@@ -143,7 +159,12 @@ public class CustomerController {
 
         return ResponseEntity.ok().body(rating);
     }
-
+    @PostMapping("/logout")
+    public ResponseEntity<String> performLogout(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(request, response, authentication);
+        return ResponseEntity.ok("Logged out successfully!");
+    }
 
 
 
